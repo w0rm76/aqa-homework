@@ -1,6 +1,11 @@
 ./bin
 ./obj
 ./vs
-./idea
+./.idea
 *.user
 ./.DS_Store
+./Game/Game/bin
+./Game/Game/obj
+./Game/vs
+./Game/.idea
+./Game/.DS_Store
