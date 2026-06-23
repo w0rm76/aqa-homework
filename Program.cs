@@ -1,4 +1,4 @@
-﻿namespace ConsoleApp;
+﻿-1namespace Game.Game;
 
 class Program
 {
