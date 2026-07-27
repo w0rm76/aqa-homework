@@ -1,21 +1,18 @@
-using System;
-
 namespace Battleship
 {
-    // ПУНКТ 3: Класс Shot для хранения истории
-    public class Shot
+    // Требование 1.4 и 5: record Shot с автоматическим вычислением результата
+    public record Shot(Board TargetBoard, Position Position, Ship HitShip)
     {
-        public Board TargetBoard { get; }
-        public Position Position { get; }
-        public Ship HitShip { get; } // null, если промах
-
+        // ИСПРАВЛЕНО: Добавлено свойство IsHit, чтобы код в Game.cs знал, рисовать X или O
         public bool IsHit => HitShip != null;
 
-        public Shot(Board targetBoard, Position position, Ship hitShip)
+        public ShootResult Result
         {
-            TargetBoard = targetBoard ?? throw new ArgumentNullException(nameof(targetBoard));
-            Position = position ?? throw new ArgumentNullException(nameof(position));
-            HitShip = hitShip; // может быть null
+            get
+            {
+                if (HitShip == null) return ShootResult.Miss;
+                return HitShip.IsSunk ? ShootResult.Sunk : ShootResult.Hit;
+            }
         }
     }
 }

@@ -6,208 +6,215 @@ namespace Battleship
 {
     public class Game
     {
-        private Board playerBoard;
-        private Board enemyBoard;
+        // ПУНКТ 3: Сохранение настроек в поле класса
+        private GameSettings settings;
+        
+        // Требование 1.3: Работа с игроками строго через тип IPlayer
+        private IPlayer player1;
+        private IPlayer player2;
         private Random random = new Random();
 
-        // ПУНКТ 6: Коллекция Shots, где хранится полная история всех выстрелов игры
-        public List<Shot> Shots { get; }
+        // Занятие 6 / Требование 1.5: Коллекция Shots для полной истории всех выстрелов
+        public List<Shot> Shots { get; } = new List<Shot>();
 
-        public Game()
+        // ПУНКТ 3: Принимаем GameSettings в构造тор
+        public Game(GameSettings settings)
         {
-            Shots = new List<Shot>();
-            
-            // Инициализируем доски размером, например, 10х10
-            playerBoard = new Board("Игрок", 10);
-            enemyBoard = new Board("Компьютер", 10);
+            this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-            // Наполняем тестовыми кораблями (в реальном проекте тут будет автогенерация)
-            playerBoard.AddShip(new Ship("Эсминец", new List<Position> { new Position(0, 0), new Position(0, 1) }));
-            enemyBoard.AddShip(new Ship("Линкор", new List<Position> { new Position(2, 2), new Position(2, 3), new Position(2, 4) }));
+            // Инициализация игрока-человека
+            player1 = new HumanPlayer("Игрок", settings.BoardSize);
+            
+            // Ручная базовая расстановка флота игрока (в учебных целях)
+            player1.MyBoard.AddShip(new HorizontalShip("Эсминец", 2, new Position(0, 0)));
+            player1.MyBoard.AddShip(new VerticalShip("Крейсер", 3, new Position(2, 1)));
+
+            // Инициализация компьютера и генерация его доски
+            player2 = new ComputerPlayer("Компьютер", settings.BoardSize);
+            GenerateOpponentBoard(player2.MyBoard);
+        }
+
+        // ПУНКТ 3: Автогенерация кораблей компьютера без пересечений
+        private void GenerateOpponentBoard(Board opponentBoard)
+        {
+            // Создаем столько же кораблей, сколько находится на доске пользователя
+            foreach (var userShip in player1.MyBoard.Ships)
+            {
+                bool shipPlaced = false;
+                while (!shipPlaced)
+                {
+                    // Генерируем случайный корабль через метод расширения Random
+                    Ship potentialShip = random.NextShip(settings, "Вражеский " + userShip.Name, userShip.Length);
+
+                    // Проверяем на пересечение со всеми уже выставленными кораблями (Пункт 2 и 3)
+                    bool hasIntersection = opponentBoard.Ships.Any(existingShip => potentialShip.IntersectsWith(existingShip));
+
+                    if (!hasIntersection)
+                    {
+                        opponentBoard.AddShip(potentialShip);
+                        shipPlaced = true;
+                    }
+                }
+            }
         }
 
         public void Play()
         {
-            Console.WriteLine("=== МОРСКОЙ БОЙ НАЧАЛСЯ ===");
-            bool isGameActive = true;
+            IShooter shooter1 = (IShooter)player1;
+            IShooter shooter2 = (IShooter)player2;
 
-            while (isGameActive)
+            Console.WriteLine("=== МОРСКОЙ БОЙ НАЧАЛСЯ ===");
+            
+            // Выводим изначальное поле игрока для ознакомления
+            Console.WriteLine("\n--- НАЧАЛЬНОЕ РАСПОЛОЖЕНИЕ ВАШИХ КОРАБЛЕЙ ---");
+            DrawBoard(player1.MyBoard, showShips: true);
+
+            while (true)
             {
-                // --- ХОД ИГРОКА ---
-                bool isUserTurnValid = false;
-                while (!isUserTurnValid)
+                // Шаг 1: КОРРЕКТНЫЙ ВЫСТРЕЛ ПОЛЬЗОВАТЕЛЯ (с циклом переигрывания)
+                bool validUserTurn = false;
+                while (!validUserTurn)
                 {
                     try
                     {
-                        Console.Write("\nВаш ход. Введите X и Y через пробел (или 'exit' для выхода): ");
-                        string input = Console.ReadLine();
+                        Shot playerShot = shooter1.Shoot(player2.MyBoard);
+                        VerifyAndRegisterShot(playerShot);
                         
-                        if (input?.Trim().ToLower() == "exit")
-                        {
-                            isGameActive = false;
-                            break;
-                        }
-
-                        string[] coordinates = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                        if (coordinates.Length != 2) 
-                            throw new FormatException("Неверный формат! Нужно ввести ровно два числа через пробел.");
-
-                        int x = int.Parse(coordinates[0]);
-                        int y = int.Parse(coordinates[1]);
-
-                        Position userTarget = new Position(x, y);
-
-                        // ПУНКТ 5: Вынос логики выстрела по доске компьютера в отдельный метод
-                        ExecuteShot(enemyBoard, userTarget);
-                        isUserTurnValid = true; // Выстрел успешен, выходим из цикла ожидания ввода
+                        Console.WriteLine($"Результат выстрела: {TranslateResult(playerShot.Result)}");
+                        validUserTurn = true; 
                     }
-                    // ПУНКТ 2: Обрабатываем исключения так, чтобы игра не завершалась аварийно
-                    catch (FormatException ex)
+                    // Занятие 6 / Пункт 2: Перехват ошибок для непрерывного процесса игры
+                    catch (Exception ex) when (ex is ArgumentException || ex is FormatException || ex is ArgumentOutOfRangeException)
                     {
-                        Console.WriteLine($"Ошибка ввода: {ex.Message}");
-                    }
-                    catch (ArgumentOutOfRangeException ex)
-                    {
-                        Console.WriteLine($"Ошибка координат: {ex.Message}");
-                    }
-                    catch (ArgumentException ex)
-                    {
-                        // Сюда попадет и попытка выстрелить повторно (Пункт 7)
-                        Console.WriteLine($"Невозможно сделать ход: {ex.Message}");
+                        Console.WriteLine($"Ошибка хода: {ex.Message} Попробуйте снова.");
                     }
                 }
 
-                if (!isGameActive) break;
-
-                // --- ХОД КОМПЬЮТЕРА ---
-                bool isEnemyTurnValid = false;
-                while (!isEnemyTurnValid)
+                // Шаг 2: КОРРЕКТНЫЙ ОТВЕТНЫЙ ВЫСТРЕЛ КОМПЬЮТЕРА (с циклом автопереигрывания при повторах)
+                bool validEnemyTurn = false;
+                while (!validEnemyTurn)
                 {
                     try
                     {
-                        // Генерируем случайную клетку на поле игрока
-                        int compX = random.Next(0, playerBoard.Size);
-                        int compY = random.Next(0, playerBoard.Size);
-                        Position enemyTarget = new Position(compX, compY);
-
-                        ExecuteShot(playerBoard, enemyTarget);
-                        isEnemyTurnValid = true;
+                        Shot computerShot = shooter2.Shoot(player1.MyBoard);
+                        VerifyAndRegisterShot(computerShot);
+                        
+                        Console.WriteLine($"[Компьютер] выстрелил в {computerShot.Position} -> {TranslateResult(computerShot.Result)}");
+                        validEnemyTurn = true; 
                     }
                     catch (ArgumentException)
                     {
-                        // Если компьютер кинул исключение "уже стреляли", он просто идет на новую итерацию генерации random
+                        // Бот попал в клетку, куда уже стрелял — повторяем попытку генерации
                         continue;
                     }
                 }
 
-                // ПУНКТ 8: Вывод LINQ статистики в конце каждого раунда
-                PrintRoundStatistics();
+                // Шаг 3: ВЫВОД ОБЕИХ ДОСОК ПОСЛЕ СОВЕРШЕНИЯ ОБОИХ ХОДОВ
+                Console.WriteLine("\n================ ТЕКУЩЕЕ СОСТОЯНИЕ ПОЛЕЙ ================");
+                Console.WriteLine("\n--- ВАША ДОСКА ---");
+                DrawBoard(player1.MyBoard, showShips: true);
 
-                // Проверка на окончание игры (если у кого-то потоплены все корабли)
-                if (IsFleetDestroyed(enemyBoard))
+                Console.WriteLine("\n--- ДОСКА КОМПЬЮТЕРА (Скрытая) ---");
+                DrawBoard(player2.MyBoard, showShips: false);
+                Console.WriteLine("=========================================================");
+
+                // Шаг 4: ВЫВОД КОЛИЧЕСТВА ПОТОПЛЕННЫХ КОРАБЛЕЙ (LINQ)
+                PrintRoundSummary();
+
+                // Шаг 5: ПРОВЕРКА ОКОНЧАНИЯ ИГРЫ (Когда флот одного из игроков полностью уничтожен)
+                if (player2.MyBoard.Ships.All(s => s.IsSunk))
                 {
-                    Console.WriteLine("\nПоздравляем! Вы уничтожили весь флот противника!");
+                    Console.WriteLine($"\nПОБЕДА! {player1.Name} уничтожил все корабли противника!");
                     break;
                 }
-                if (IsFleetDestroyed(playerBoard))
+
+                if (player1.MyBoard.Ships.All(s => s.IsSunk))
                 {
-                    Console.WriteLine("\nУвы! Компьютер разбил ваши корабли!");
+                    Console.WriteLine($"\nПОРАЖЕНИЕ! {player2.Name} полностью разбил ваш флот!");
                     break;
                 }
             }
         }
 
-        // ПУНКТ 5: Вынесенный изолированный метод для обработки выстрела
-        private void ExecuteShot(Board targetBoard, Position position)
+        // Подсказка к 1.5: Проверяем дубликаты до сохранения в историю и в списки корабля
+        private void VerifyAndRegisterShot(Shot newShot)
         {
-            // Проверка границ доски перед выстрелом
-            if (position.X >= targetBoard.Size || position.Y >= targetBoard.Size)
+            // Проверяем, был ли выстрел по этой же таргет-доске в эти же координаты (Пункт 7)
+            bool isDuplicate = Shots.Any(s => s.TargetBoard == newShot.TargetBoard && s.Position.Equals(newShot.Position));
+            if (isDuplicate)
             {
-                throw new ArgumentOutOfRangeException(nameof(position), $"Выстрел {position} выходит за пределы поля {targetBoard.Size}x{targetBoard.Size}.");
+                throw new ArgumentException("В эту клетку на данной доске уже стреляли.");
             }
 
-            // ПУНКТ 7: Если игрок пытается выстрелить в клетку, куда уже стреляли, бросаем исключение
-            bool isAlreadyTargeted = Shots.Any(s => s.TargetBoard == targetBoard && s.Position.Equals(position));
-            if (isAlreadyTargeted)
-            {
-                throw new ArgumentException($"В ячейку {position} на доске '{targetBoard.OwnerName}' уже производился выстрел.");
-            }
+            // Добавляем выстрел в общую историю игры
+            Shots.Add(newShot);
 
-            // Находим корабль (Пункт 4)
-            Ship targetShip = targetBoard.FindShip(position);
-
-            // ПУНКТ 5 и 6: Создаем объект Shot и добавляем в общую историю
-            Shot shotResult = new Shot(targetBoard, position, targetShip);
-            Shots.Add(shotResult);
-
-            // Информируем о результате
-            if (shotResult.IsHit)
+            // ПУНКТ 5: При попадании добавляем Shot в личную коллекцию корабля
+            if (newShot.HitShip != null)
             {
-                Console.WriteLine($"[{targetBoard.OwnerName}] ПОПАДАНИЕ в {position}! Задет корабль: {targetShip.Name}");
-            }
-            else
-            {
-                Console.WriteLine($"[{targetBoard.OwnerName}] ПРОМАХ в {position}.");
+                newShot.HitShip.ShipHits.Add(newShot);
             }
         }
 
-        // ПУНКТ 8: Метод вывода статистики с использованием LINQ
-        private void PrintRoundStatistics()
+        // ПУНКТ 4: Отрисовка поля через два вложенных цикла for
+        private void DrawBoard(Board board, bool showShips)
         {
-            Console.WriteLine("\n--- СТАТИСТИКА ТЕКУЩЕГО РАУНДА ---");
+            // Вывод строки-индикатора номеров колонок
+            Console.Write("  ");
+            for (int col = 0; col < board.Size; col++) Console.Write(col + " ");
+            Console.WriteLine();
 
-            // Выделяем доски, которые участвуют в игре
-            Board[] boardsInGame = { playerBoard, enemyBoard };
-
-            foreach (var board in boardsInGame)
+            // Внешний цикл — строки (Y), Внутренний — столбцы (X)
+            for (int y = 0; y < board.Size; y++)
             {
-                // Выбираем из истории все выстрелы по конкретно этой доске
-                var boardShots = Shots.Where(s => s.TargetBoard == board).ToList();
+                Console.Write(y + " "); // Номер строки слева
 
-                Console.WriteLine($"\nДоска: {board.OwnerName}");
-                
-                // 8.1. Общее количество выстрелов
-                Console.WriteLine($"  8.1. Общее кол-во выстрелов: {boardShots.Count}");
-
-                // 8.2. Количество попаданий
-                Console.WriteLine($"  8.2. Кол-во попаданий: {boardShots.Count(s => s.IsHit)}");
-
-                // 8.3. Количество промахов
-                Console.WriteLine($"  8.3. Кол-во промахов: {boardShots.Count(s => !s.IsHit)}");
-
-                // 8.4. Был ли хотя бы один промах
-                Console.WriteLine($"  8.4. Был ли хоть один промах: {(boardShots.Any(s => !s.IsHit) ? "Да" : "Нет")}");
-
-                // 8.5. Первый успешный выстрел
-                var firstSuccessfulShot = boardShots.FirstOrDefault(s => s.IsHit);
-                Console.WriteLine($"  8.5. Первый успешный выстрел: {(firstSuccessfulShot != null ? firstSuccessfulShot.Position.ToString() : "Отсутствует")}");
-
-                // 8.6. Список координат всех попаданий
-                var hitCoords = boardShots.Where(s => s.IsHit).Select(s => s.Position);
-                Console.WriteLine($"  8.6. Координаты попаданий: {(hitCoords.Any() ? string.Join(", ", hitCoords) : "Нет")}");
-
-                // 8.7.* Статистика для каждого корабля на доске
-                Console.WriteLine("  8.7.* Состояние флота:");
-                foreach (var ship in board.Ships)
+                for (int x = 0; x < board.Size; x++)
                 {
-                    // Считаем через LINQ, сколько выстрелов из истории попало именно в этот корабль
-                    int hitsOnShip = boardShots.Count(s => s.HitShip == ship);
-                    bool isSunk = hitsOnShip >= ship.Cells.Count;
+                    Position currentPos = new Position(x, y);
 
-                    Console.WriteLine($"    - Корабль '{ship.Name}' | Попаданий: {hitsOnShip}/{ship.Cells.Count} | Статус: {(isSunk ? "ПОТОПЛЕН" : "На плаву")}");
+                    // Проверяем, стреляли ли сюда
+                    Shot shot = Shots.FirstOrDefault(s => s.TargetBoard == board && s.Position.Equals(currentPos));
+                    Ship shipOnCell = board.FindShip(currentPos);
+
+                    if (shot != null)
+                    {
+                        // Попадание — X, Промах — O
+                        Console.Write(shot.IsHit ? "X " : "O ");
+                    }
+                    else if (shipOnCell != null && showShips)
+                    {
+                        // Неповрежденная палуба на доске игрока — S
+                        Console.Write("S ");
+                    }
+                    else
+                    {
+                        // Пустая клетка или скрытый корабль компьютера — точка
+                        Console.Write(". ");
+                    }
                 }
+                Console.WriteLine();
             }
-            Console.WriteLine("----------------------------------");
         }
 
-        private bool IsFleetDestroyed(Board board)
+        // ПУНКТ 5: Подсчет потопленных кораблей на каждой доске через LINQ
+        private void PrintRoundSummary()
         {
-            // Считаем сумму палуб всех кораблей на доске
-            int totalShipCells = board.Ships.Sum(s => s.Cells.Count);
-            // Считаем сколько раз по этой доске успешно попали
-            int totalHits = Shots.Count(s => s.TargetBoard == board && s.IsHit);
+            int playerSunk = player1.MyBoard.Ships.Count(s => s.IsSunk);
+            int enemySunk = player2.MyBoard.Ships.Count(s => s.IsSunk);
 
-            return totalHits >= totalShipCells;
+            Console.WriteLine($"\n=== КОЛИЧЕСТВО ПОТОПЛЕННЫХ КОРАБЛЕЙ ===");
+            Console.WriteLine($"У Вас на доске уничтожено: {playerSunk} из {player1.MyBoard.Ships.Count}");
+            Console.WriteLine($"У Компьютера уничтожено: {enemySunk} из {player2.MyBoard.Ships.Count}");
+            Console.WriteLine("========================================");
         }
+
+        private string TranslateResult(ShootResult result) => result switch
+        {
+            ShootResult.Miss => "Промах!",
+            ShootResult.Hit => "Попадание (Корабль ранен)!",
+            ShootResult.Sunk => "Потоплен! Корабль полностью уничтожен!",
+            _ => "Неизвестный исход"
+        };
     }
 }

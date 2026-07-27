@@ -8,13 +8,16 @@ namespace Battleship
         {
             try
             {
-                Game game = new Game();
+                // Задаем настройки (например, классическое поле 6х6 клеток)
+                GameSettings settings = new GameSettings(6);
+
+                Game game = new Game(settings);
                 game.Play();
             }
             catch (Exception ex)
             {
-                // Вывод пользователю критических сообщений сбоя через Exception.Message
-                Console.WriteLine($"Критическая ошибка инициализации игры: {ex.Message}");
+                // Вывод пользователю сообщения критического сбоя
+                Console.WriteLine($"Критический сбой инициализации игры: {ex.Message}");
             }
         }
     }
