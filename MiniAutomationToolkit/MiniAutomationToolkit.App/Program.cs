@@ -57,3 +57,69 @@ foreach (var item in resultList)
 {
     Console.WriteLine($"'{item}'");
 }
+
+// --- Тестирование Задания 4: Неизменяемый пользователь ---
+Console.WriteLine("\n--- Тест Задания 4: Неизменяемый пользователь ---");
+
+// 1. Успешное создание пользователя Alex Smith
+try
+{
+    var user1 = new UserDto("Alex Smith", "alex@example.com");
+    Console.WriteLine($"Успешно создан: {user1}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Ошибка при валидном создании: {ex.Message}");
+}
+
+// 2. Равенство двух объектов с одинаковыми значениями
+var userA = new UserDto("Alex Smith", "alex@example.com");
+var userB = new UserDto("Alex Smith", "alex@example.com");
+Console.WriteLine($"userA == userB: {userA == userB} (Ожидается: True)");
+Console.WriteLine($"userA.Equals(userB): {userA.Equals(userB)} (Ожидается: True)");
+
+// 3. Демонстрация невозможности изменить свойства (закомментировано, так как вызывает ошибку компиляции)
+// userA.Name = "New Name"; // Ошибка Rider: Property or indexer 'UserDto.Name' cannot be assigned to -- it is read only
+
+// 4. Демонстрация ошибочных сценариев
+Console.WriteLine("\n--- Демонстрация ошибочных сценариев ---");
+
+// Сценарий А: пустое имя и корректный email
+try
+{
+    var badUser = new UserDto("", "alex@example.com");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Перехвачено исключение (пустое имя): {ex.Message}");
+}
+
+// Сценарий Б: корректное имя и пустой email
+try
+{
+    var badUser = new UserDto("Alex Smith", "   ");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Перехвачено исключение (пустой email): {ex.Message}");
+}
+
+// Сценарий В: корректное имя и email без символа @
+try
+{
+    var badUser = new UserDto("Alex Smith", "alex_example.com");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Перехвачено исключение (нет @): {ex.Message}");
+}
+
+// Сценарий Г: корректное имя и email с пробелом
+try
+{
+    var badUser = new UserDto("Alex Smith", "alex @example.com");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Перехвачено исключение (есть пробел): {ex.Message}");
+}
