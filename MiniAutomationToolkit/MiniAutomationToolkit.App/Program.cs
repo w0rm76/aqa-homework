@@ -7,6 +7,8 @@ using MiniAutomationToolkit.Core.Extensions;
 using MiniAutomationToolkit.Core.Simulations;
 using System.Diagnostics;
 using MiniAutomationToolkit.Core.Services;
+using MiniAutomationToolkit.Core.Validation;
+
 
 
 
@@ -314,4 +316,28 @@ if (File.Exists(logPath))
 else
 {
     Console.WriteLine("Лог-файл не был создан.");
+}
+
+// ===================================================================
+// --- Тестирование Задания 10: Защитный валидатор ------------------
+// ===================================================================
+Console.WriteLine("\n--- Тест Задания 10: Защитный валидатор ---");
+
+int[] testNumbers = { 5, -5, 0 };
+
+foreach (int num in testNumbers)
+{
+    try
+    {
+        // Вызываем метод валидации. Для числа 5 он отработает полностью молча.
+        Guard.EnsurePositive(num, nameof(num));
+        
+        // Эта строка выполнится ТОЛЬКО если исключение не выброшено (для числа 5)
+        Console.WriteLine($"Число {num} успешно прошло валидацию (метод отработал молча).");
+    }
+    catch (ValidationException ex)
+    {
+        // Для -5 и 0 мы перехватим ошибку и выведем сообщение
+        Console.WriteLine($"Перехвачено ожидаемое исключение для {num}: {ex.Message}");
+    }
 }
