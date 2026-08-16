@@ -4,6 +4,9 @@ using MiniAutomationToolkit.Core.Services;
 using MiniAutomationToolkit.Core.Pages;
 using MiniAutomationToolkit.Core.Configuration;
 using MiniAutomationToolkit.Core.Extensions;
+using MiniAutomationToolkit.Core.Simulations;
+using System.Diagnostics;
+
 
 
 Console.WriteLine("MiniAutomationToolkit started");
@@ -239,3 +242,23 @@ foreach (var str in testStrings)
     string displayStr = str ?? "<null>";
     Console.WriteLine($"'{displayStr}' → {hasScheme}");
 }
+
+// ===================================================================
+// --- Тестирование Задания 8: Имитация длительной операции ----------
+// ===================================================================
+Console.WriteLine("\n--- Тест Задания 8: Имитация длительной операции ---");
+
+var simulator = new LongOperationSimulator();
+var stopwatch = new Stopwatch();
+
+Console.WriteLine("Запуск асинхронной операции...");
+
+stopwatch.Start();
+
+// Вызываем асинхронный вариант через await (без использования .Result или .Wait())
+string asyncResult = await simulator.LongOperationAsync();
+
+stopwatch.Stop();
+
+Console.WriteLine($"Результат выполнения: {asyncResult}");
+Console.WriteLine($"Время выполнения асинхронной операции: {stopwatch.ElapsedMilliseconds} мс");
