@@ -6,8 +6,9 @@ using MiniAutomationToolkit.Core.Configuration;
 using MiniAutomationToolkit.Core.Extensions;
 using MiniAutomationToolkit.Core.Simulations;
 using System.Diagnostics;
-using MiniAutomationToolkit.Core.Services;
 using MiniAutomationToolkit.Core.Validation;
+using MiniAutomationToolkit.Core.Repositories;
+
 
 
 
@@ -340,4 +341,76 @@ foreach (int num in testNumbers)
         // Для -5 и 0 мы перехватим ошибку и выведем сообщение
         Console.WriteLine($"Перехвачено ожидаемое исключение для {num}: {ex.Message}");
     }
+}
+
+// ===================================================================
+// --- Тестирование Задания 11: Склад товаров -------------------------
+// ===================================================================
+Console.WriteLine("\n--- Тест Задания 11: Склад товаров ---");
+
+string csvPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "products.csv");
+
+// Страховка для Rider на Mac: если папка или файл не скопировались, создаем на лету
+if (!Directory.Exists(Path.GetDirectoryName(csvPath)))
+{
+    Directory.CreateDirectory(Path.GetDirectoryName(csvPath)!);
+}
+if (!File.Exists(csvPath))
+{
+    File.WriteAllLines(csvPath, new[]
+    {
+        "Name;Price;Category",
+        "Laptop;1200;Electronics",
+        "Mouse;25;Electronics",
+        "Bread;2;Food",
+        "Milk;1;Food",
+        "Cheese;5;Food",
+        "T-Shirt;15;Clothing",
+        "Novel;12;Books"
+    });
+}
+
+try
+{
+    // 1. Загружаем товары
+    List<Product> loadedProducts = ProductRepository.LoadFromCsv(csvPath);
+    Console.WriteLine($"Количество загруженных товаров: {loadedProducts.Count}");
+
+    // 2. Тестируем выборку для категории Food и бюджета 10
+    decimal budget10 = 10m;
+    Console.WriteLine($"\nТовары категории Food с ценой строго меньше {budget10}:");
+    List<string> affordable10 = ProductRepository.GetAffordableProducts(loadedProducts, ProductCategory.Food, budget10);
+    
+    if (affordable10.Count == 0)
+    {
+        Console.WriteLine("No products found");
+    }
+    else
+    {
+        foreach (string name in affordable10)
+        {
+            Console.WriteLine($"- {name}");
+        }
+    }
+
+    // 3. Тестируем выборку для категории Food и бюджета 1
+    decimal budget1 = 1m;
+    Console.WriteLine($"\nТовары категории Food с ценой строго меньше {budget1}:");
+    List<string> affordable1 = ProductRepository.GetAffordableProducts(loadedProducts, ProductCategory.Food, budget1);
+    
+    if (affordable1.Count == 0)
+    {
+        Console.WriteLine("No products found");
+    }
+    else
+    {
+        foreach (string name in affordable1)
+        {
+            Console.WriteLine($"- {name}");
+        }
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Произошла ошибка: {ex.Message}");
 }
