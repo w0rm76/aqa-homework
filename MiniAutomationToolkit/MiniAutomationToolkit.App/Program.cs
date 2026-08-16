@@ -2,6 +2,7 @@
 using MiniAutomationToolkit.Core.Models;
 using MiniAutomationToolkit.Core.Services;
 using MiniAutomationToolkit.Core.Pages;
+using MiniAutomationToolkit.Core.Configuration;
 
 Console.WriteLine("MiniAutomationToolkit started");
 Console.WriteLine();
@@ -159,4 +160,55 @@ try
 catch (InvalidOperationException ex)
 {
     Console.WriteLine($"Ошибка: {ex.Message}");
+}
+
+
+// ===================================================================
+// --- Тестирование Задания 6: Умная конфигурация --------------------
+// ===================================================================
+Console.WriteLine("\n--- Тест Задания 6: Умная конфигурация ---");
+
+// 1. Формируем базовый путь в папке bin/Debug/...
+string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "appsettings.txt");
+
+// 2. Резервный план для macOS/Rider: если файл не скопировался в bin, читаем его напрямую из проекта
+if (!File.Exists(configPath))
+{
+    string projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", ".."));
+    configPath = Path.Combine(projectRoot, "MiniAutomationToolkit.App", "data", "appsettings.txt");
+}
+
+try
+{
+    // Инициализируем конфигурацию и читаем файл
+    var config = new AppConfig(configPath);
+
+    // Читаем параметры в строго заданных типах данных
+    string baseUrl = config.GetSetting<string>("baseUrl");
+    int timeout = config.GetSetting<int>("timeout");
+    bool headless = config.GetSetting<bool>("headless");
+    int retryCount = config.GetSetting<int>("retryCount");
+
+    // Выводим результаты в консоль
+    Console.WriteLine("Успешно прочитано из конфигурации:");
+    Console.WriteLine($"- baseUrl (string): {baseUrl}");
+    Console.WriteLine($"- timeout (int): {timeout}");
+    Console.WriteLine($"- headless (bool): {headless}");
+    Console.WriteLine($"- retryCount (int): {retryCount}");
+
+    // Демонстрируем обработку отсутствующего ключа, как просит задание
+    Console.WriteLine("\nПопытка получить несуществующий ключ 'missingKey'...");
+    config.GetSetting<string>("missingKey");
+}
+catch (KeyNotFoundException ex)
+{
+    Console.WriteLine($"Перехвачено ожидаемое исключение (Ключ не найден): {ex.Message}");
+}
+catch (InvalidDataException ex)
+{
+    Console.WriteLine($"Ошибка в формате данных конфигурации: {ex.Message}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Непредвиденная системная ошибка: {ex.Message}");
 }
