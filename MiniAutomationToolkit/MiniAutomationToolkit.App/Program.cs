@@ -1,6 +1,7 @@
 ﻿using System;
 using MiniAutomationToolkit.Core.Models;
 using MiniAutomationToolkit.Core.Services;
+using MiniAutomationToolkit.Core.Pages;
 
 Console.WriteLine("MiniAutomationToolkit started");
 Console.WriteLine();
@@ -122,4 +123,40 @@ try
 catch (ArgumentException ex)
 {
     Console.WriteLine($"Перехвачено исключение (есть пробел): {ex.Message}");
+}
+
+// --- Тестирование Задания 5: Базовая страница ---
+Console.WriteLine("\n--- Тест Задания 5: Базовая страница ---");
+
+// 1. Создаем список страниц
+var pages = new List<BasePage>
+{
+    new LoginPage(),
+    new HomePage()
+};
+
+// 2. Вызываем метод Load для каждой страницы
+Console.WriteLine("Загрузка страниц:");
+foreach (var page in pages)
+{
+    page.Load();
+}
+
+// 3. Проверяем уникальность URL с помощью LINQ
+try
+{
+    int totalCount = pages.Count;
+    // Select вытаскивает все URL, Distinct убирает дубликаты, Count считает уникальные
+    int uniqueCount = pages.Select(p => p.Url).Distinct().Count();
+
+    if (uniqueCount < totalCount)
+    {
+        throw new InvalidOperationException("Обнаружены дубликаты URL среди страниц!");
+    }
+
+    Console.WriteLine("All page URLs are unique.");
+}
+catch (InvalidOperationException ex)
+{
+    Console.WriteLine($"Ошибка: {ex.Message}");
 }
