@@ -6,6 +6,8 @@ using MiniAutomationToolkit.Core.Configuration;
 using MiniAutomationToolkit.Core.Extensions;
 using MiniAutomationToolkit.Core.Simulations;
 using System.Diagnostics;
+using MiniAutomationToolkit.Core.Services;
+
 
 
 
@@ -262,3 +264,54 @@ stopwatch.Stop();
 
 Console.WriteLine($"Результат выполнения: {asyncResult}");
 Console.WriteLine($"Время выполнения асинхронной операции: {stopwatch.ElapsedMilliseconds} мс");
+
+// ===================================================================
+// --- Тестирование Задания 9: Логгер ошибок -------------------------
+// ===================================================================
+Console.WriteLine("\n--- Тест Задания 9: Логгер ошибок ---");
+
+// Определяем базовую директорию для файлов data
+string baseDataDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data");
+
+// Защита для macOS/Rider: создаем папку и файл input.txt, если они не скопировались при сборке
+if (!Directory.Exists(baseDataDir))
+{
+    Directory.CreateDirectory(baseDataDir);
+}
+
+string inputPath = Path.Combine(baseDataDir, "input.txt");
+if (!File.Exists(inputPath))
+{
+    File.WriteAllText(inputPath, "Привет из файла input.txt!\nЭто тестовая строка для домашней работы.");
+}
+
+string missingPath = Path.Combine(baseDataDir, "missing.txt");
+string logPath = Path.Combine(baseDataDir, "errors.log");
+
+var errorLogger = new ErrorLogger();
+
+// Сценарий 1: Чтение существующего файла
+Console.WriteLine("Сценарий 1: Чтение существующего файла...");
+string? successContent = errorLogger.TryReadFile(inputPath, logPath);
+Console.WriteLine($"Содержимое файла:\n{successContent}");
+
+// Сценарий 2: Попытка чтения отсутствующего файла
+Console.WriteLine("\nСценарий 2: Чтение отсутствующего файла...");
+string? failedContent = errorLogger.TryReadFile(missingPath, logPath);
+
+if (failedContent == null)
+{
+    Console.WriteLine("Файл не найден, метод успешно вернул null. Ошибка записана в лог.");
+}
+
+// Вывод содержимого созданного лог-файлаerrors.log
+Console.WriteLine("\nСодержимое файла errors.log:");
+if (File.Exists(logPath))
+{
+    string logContent = File.ReadAllText(logPath);
+    Console.Write(logContent);
+}
+else
+{
+    Console.WriteLine("Лог-файл не был создан.");
+}
