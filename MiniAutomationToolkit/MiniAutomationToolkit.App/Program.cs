@@ -33,3 +33,27 @@ catch (ArgumentOutOfRangeException ex)
 {
     Console.WriteLine($"\nПерехвачено ожидаемое исключение: {ex.Message}");
 }
+
+// --- Тестирование Задания 3 ---
+Console.WriteLine("\n--- Тест Задания 3: Поиск в хаосе ---");
+
+var chaoticList = new List<string>
+{
+    "  Apple ", 
+    "banana", 
+    "  ", 
+    null, 
+    "Cat", 
+    "box", 
+    "Dog", 
+    "  Elephant"
+};
+
+IDataFilter filter = new DataFilter();
+List<string> resultList = filter.FilterAndSort(chaoticList);
+
+Console.WriteLine("Результат фильтрации и сортировки:");
+foreach (var item in resultList)
+{
+    Console.WriteLine($"'{item}'");
+}
