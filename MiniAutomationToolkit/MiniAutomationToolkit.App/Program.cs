@@ -3,6 +3,8 @@ using MiniAutomationToolkit.Core.Models;
 using MiniAutomationToolkit.Core.Services;
 using MiniAutomationToolkit.Core.Pages;
 using MiniAutomationToolkit.Core.Configuration;
+using MiniAutomationToolkit.Core.Extensions;
+
 
 Console.WriteLine("MiniAutomationToolkit started");
 Console.WriteLine();
@@ -211,4 +213,29 @@ catch (InvalidDataException ex)
 catch (Exception ex)
 {
     Console.WriteLine($"Непредвиденная системная ошибка: {ex.Message}");
+}
+
+// ===================================================================
+// --- Тестирование Задания 7: Расширяем возможности строк -----------
+// ===================================================================
+Console.WriteLine("\n--- Тест Задания 7: Расширяем возможности строк ---");
+
+// Список тестовых значений из условия задания
+var testStrings = new string?[]
+{
+    "https://google.com",
+    "http://example.org",
+    "ftp://files.example.com",
+    null,
+    "HTTPS://SITE.EXAMPLE.COM"
+};
+
+foreach (var str in testStrings)
+{
+    // Вызываем метод как метод экземпляра строки 
+    bool hasScheme = str.HasHttpScheme();
+    
+    // Выводим результат в консоль
+    string displayStr = str ?? "<null>";
+    Console.WriteLine($"'{displayStr}' → {hasScheme}");
 }
