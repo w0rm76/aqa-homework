@@ -1,3 +1,4 @@
+obj
 ./bin
 ./obj
 ./vs
@@ -9,3 +10,11 @@ Game/Game/obj
 Game/vs
 Game/.idea
 Game/.DS_Store
+.DS_Store
+.idea/
+BattleShip/.idea/
+BattleShip/BattleShip.sln
+BattleShip/BattleShip/BattleShip.csproj
+BattleShip/BattleShip/bin/
+Game/Game/.gitignore
+Game/Game/.idea/
