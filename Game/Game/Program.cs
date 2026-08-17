@@ -1,89 +1,28 @@
-﻿Console.WriteLine("Hello this is Rock Paper Scissors");
-Console.WriteLine("Enter your step");
-
-
-var userWon = false;
-
-while (userWon == false)
+﻿namespace RockPaperScissors
 {
-    Console.Clear();
-    
-    Console.WriteLine("1 - Rock");
-    Console.WriteLine("2 - Paper");
-    Console.WriteLine("3 - Scissors");
-    Console.WriteLine("0 - Exit");
-    
-    var userInput = Console.ReadLine(); // "5"
-
-    int userChoice;
-
-    // parse user input = string into int 
-    // put result to out result param
-    // return if parse was successful
-
-    if (!int.TryParse(userInput, out userChoice) || !(userChoice >= 0 && userChoice <= 3))
+    class Program
     {
-        Console.WriteLine("Invalid input");
-        continue;
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Hello this is Rock Paper Scissors...and Well");
+            Console.WriteLine("How many steps do you want to play? ( 1 to 10 )");
+            string userInput = Console.ReadLine();
+
+            if (!int.TryParse(userInput, out int rounds) || !(rounds > 0 && rounds <= 10))
+            {
+                Console.WriteLine("Exit the game");
+                return;
+            }
+            Console.WriteLine($"You chose {rounds} round(s)");
+            Console.Clear();
+            
+            Player player = new Player("You");
+            Player computer = new Player("pc");
+            
+            Game game = new Game(player, computer, rounds);
+            game.Play();
+
+            Console.ReadLine();
+        }
     }
-
-    if (userChoice == 0)
-    {
-        return;
-    }
-
-    var random = new Random();
-    var computerChoice = random.Next(1, 4); // generate random number 1-3
-
-    string userChoiceString;
-    switch (userChoice)
-    {
-        case 1:
-            Console.WriteLine("Rock");
-            userChoiceString = "Rock";
-            break;
-        case 2:
-            userChoiceString = "Paper";
-            break;
-        default:
-            userChoiceString = "Scissors";
-            break;
-    }
-
-    Console.WriteLine($"You chose {userChoiceString}");
-
-    string computerChoiceString = computerChoice switch
-    {
-        1 => "Rock",
-        2 => "Paper",
-        _ => "Scissors"
-    };
-
-    Console.WriteLine($"Computer chose {computerChoiceString}");
-
-    if (computerChoice == userChoice)
-    {
-        Console.WriteLine("Draw");
-    }
-    else if (userChoice == 1 && computerChoice == 3 || userChoice == 2 && computerChoice == 1 ||
-             userChoice == 3 && computerChoice == 2)
-    {
-        Console.WriteLine("You win");
-        userWon = true;
-    }
-    else
-    {
-        Console.WriteLine("You lose");
-    }
-
-    // Ctrl + K + D 
 }
-
-
-//data in C# 
-//  int, long 5 10 11
-//  float, double, decimal 56.132
-//  chars - 'a'
-//  strings - "text"
-//  bool - true / false
-//  class
