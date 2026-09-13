@@ -1,0 +1,10 @@
+.icanvas
+.rider/
+.idea/
+bin/
+obj/
+*.user
+MiniAutomationToolkit.App/bin/
+MiniAutomationToolkit.App/obj/
+MiniAutomationToolkit.Core/bin/
+MiniAutomationToolkit.Core/obj/

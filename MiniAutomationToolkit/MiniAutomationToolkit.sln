@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniAutomationToolkit.Core", "MiniAutomationToolkit.Core\MiniAutomationToolkit.Core.csproj", "{A487EFD2-37AC-4CD0-BBC6-E04A65D67758}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniAutomationToolkit.App", "MiniAutomationToolkit.App\MiniAutomationToolkit.App.csproj", "{ABDF274D-846C-437C-BA38-019881147B81}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A487EFD2-37AC-4CD0-BBC6-E04A65D67758}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A487EFD2-37AC-4CD0-BBC6-E04A65D67758}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A487EFD2-37AC-4CD0-BBC6-E04A65D67758}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A487EFD2-37AC-4CD0-BBC6-E04A65D67758}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABDF274D-846C-437C-BA38-019881147B81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABDF274D-846C-437C-BA38-019881147B81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABDF274D-846C-437C-BA38-019881147B81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABDF274D-846C-437C-BA38-019881147B81}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
