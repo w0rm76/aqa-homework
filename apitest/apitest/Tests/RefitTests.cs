@@ -1,9 +1,9 @@
 using System.Net;
 using apitest.DTO;
 using apitest.Interfaces;
+using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
-using Dapper;
 
 namespace apitest;
 
@@ -11,11 +11,13 @@ public class RefitTests
 {
     private IUserApiClient _client;
     private DataAccessModule _dbModule;
+    private TestPrecondition _precondition;
 
     [OneTimeSetUp]
     public async Task Setup()
     {
-        _dbModule = new DataAccessModule();
+        _precondition = new TestPrecondition();
+        _dbModule = _precondition.Provider.GetRequiredService<DataAccessModule>();
         await _dbModule.SetupDatabaseAsync();
 
         var services = new ServiceCollection();
@@ -61,18 +63,16 @@ public class RefitTests
         var response = await _client.DeleteUserAsync(2);
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NoContent));
     }
-    
+
     [Test]
     public async Task Test_Database_GetOrCreateUser()
     {
         using var connection = _dbModule.CreateConnection();
         await connection.OpenAsync();
-        
+
         const string sql = "SELECT * FROM Users WHERE Email = @Email;";
-        
         var dbUser = await connection.QueryFirstOrDefaultAsync(sql, new { Email = "ivan.petrov@mail.ru" });
 
-        // 4. Делаем проверки (Assert)
         Assert.Multiple(() =>
         {
             Assert.That(dbUser, Is.Not.Null, "Пользователь не найден в базе данных!");

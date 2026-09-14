@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace apitest;
 
@@ -21,5 +22,14 @@ public class DataAccessModule
         using var connection = CreateConnection();
         await connection.OpenAsync();
         await DatabaseInitializer.InitializeAsync(connection);
+    }
+}
+
+public static class DataAccessExtensions
+{
+    public static IServiceCollection AddDataAccess(this IServiceCollection services, string connectionString)
+    {
+        services.AddSingleton(new DataAccessModule(connectionString));
+        return services;
     }
 }
