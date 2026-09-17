@@ -5,7 +5,7 @@ namespace apitest.EmailSender;
 
 public static class ServiceCollection
 {
-    public static IServiceCollection services = new ServiceCollection();
+    public static IServiceCollection services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
 
     public static IServiceCollection CreateServiceCollection()
     {
