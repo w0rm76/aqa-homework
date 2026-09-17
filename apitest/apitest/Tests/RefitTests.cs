@@ -1,7 +1,7 @@
 using System.Net;
 using apitest.DTO;
 using apitest.Interfaces;
-using Dapper;
+using apitest.DapperRepository;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
 
@@ -12,6 +12,7 @@ public class RefitTests
     private IUserApiClient _client;
     private DataAccessModule _dbModule;
     private TestPrecondition _precondition;
+    private IUserRepository _userRepository;
 
     [OneTimeSetUp]
     public async Task Setup()
@@ -19,6 +20,8 @@ public class RefitTests
         _precondition = new TestPrecondition();
         _dbModule = _precondition.Provider.GetRequiredService<DataAccessModule>();
         await _dbModule.SetupDatabaseAsync();
+
+        _userRepository = new UserRepository(_dbModule);
 
         var services = new ServiceCollection();
         services.AddRefitClient<IUserApiClient>()
@@ -67,11 +70,7 @@ public class RefitTests
     [Test]
     public async Task Test_Database_GetOrCreateUser()
     {
-        using var connection = _dbModule.CreateConnection();
-        await connection.OpenAsync();
-
-        const string sql = "SELECT * FROM Users WHERE Email = @Email;";
-        var dbUser = await connection.QueryFirstOrDefaultAsync(sql, new { Email = "ivan.petrov@mail.ru" });
+        var dbUser = await _userRepository.GetUserByEmailAsync("ivan.petrov@mail.ru");
 
         Assert.Multiple(() =>
         {
